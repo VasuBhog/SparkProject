@@ -10,9 +10,10 @@ if __name__ == "__main__":
     file_path = []
 
     og_path = os.getcwd()
+    f = open(os.path.join(og_path,"result.txt"),'w+')
+    f.close()
+
     f = open(os.path.join(og_path,"result.txt"),'a+')
-
-
     #Testing on 2 subfolders - should be 10
     for x in range(2):
         year = "201" + str(x)
@@ -97,7 +98,7 @@ if __name__ == "__main__":
         print("Writing to File")
         f.write("\nYear: " + str(year) + "---")
 
-        f.write("\nMax Temp for Station Code - " + str(station_code_max[1::]) + "and Date - " + str(date_max) + "is " + str(TEMP_MAX))
-        f.write("\nMin Temp for Station Code - " + str(station_code_min[1::]) + "and Date - " + str(date_min) + "is " + str(TEMP_MAX))
+        f.write("\nMax Temp for Station Code - " + str(station_code_max[1::]) + "and Date - " + str(date_max) + " is " + str(TEMP_MAX))
+        f.write("\nMin Temp for Station Code - " + str(station_code_min[1::]) + "and Date - " + str(date_min) + " is " + str(TEMP_MIN) + "\n")
 
     f.close()
