@@ -4,6 +4,30 @@ import sys, os
 
 #from pyspark import SparkContext, SparkConf
 
+def getMaxTemp(d):
+    tempVal = d.get('TEMP')
+    HOTEST = max(tempVal)
+    maxIndex = tempVal.index(HOTEST)
+    return HOTEST, maxIndex
+
+def getMinTemp(d):
+    tempVal = d.get('TEMP')
+    COLDEST = min(tempVal)
+    minIndex = tempVal.index(COLDEST)
+    return COLDEST, minIndex
+
+def getDate(d,index):
+    # dateVal = d.get("YEARMODA")
+    # date = dateVal[index]
+    # return date
+    return d.get("YEARMODA")[index]
+
+def getStation(d,index):
+    # stationVal = d.get("STN")
+    # station = stationVal[index]
+    # return station
+    return d.get("STN")[index]
+
 if __name__ == "__main__":
     folder = "weather/"
     years = []
@@ -16,8 +40,9 @@ if __name__ == "__main__":
     f.close()
 
     f = open(os.path.join(og_path,"result.txt"),'a+')
+
     #Testing on 2 subfolders - should be 10
-    for x in range(2):
+    for x in range(10):
         year = "201" + str(x)
         years.append(year)
 
@@ -40,7 +65,7 @@ if __name__ == "__main__":
         for item in name_list:
             if len(item)>0:
                 names.append(item)
-        print(names)
+        # print(names)
 
         #rdd
         rdd1 = inTextData.rdd
@@ -69,14 +94,18 @@ if __name__ == "__main__":
 
         cleanData.printSchema()
        
+        ###### START CALCULATIONS ##########
+
         #Get Max and MIN TEMPS for each year
         TEMP_MAX = cleanData.select("TEMP").rdd.max()[0]
         TEMP_MIN = cleanData.select("TEMP").rdd.min()[0]
         year = years[x]
+        print(year)
 
-        #Print Check
-        print("Max Temp for " + str(year) + " is: " + str(TEMP_MAX))
-        print("Min Temp for " + str(year) + " is: " + str(TEMP_MIN))
+
+        # #Print Check
+        # print("Max Temp for " + str(year) + " is: " + str(TEMP_MAX))
+        # print("Min Temp for " + str(year) + " is: " + str(TEMP_MIN))
 
         #Get Station Code and Data 
         max_row = cleanData.filter(cleanData.TEMP == TEMP_MAX).collect()
@@ -101,12 +130,57 @@ if __name__ == "__main__":
         print("Hottest LIST: " + str(hotDict))
         print("Coldest LIST: " + str(hotDict))
 
-        #WRITE TO FILE
-        print("Writing to File")
+        # #WRITE TO FILE
+        print("Writing to File\n")
         f.write("\nYear: " + str(year) + " ---")
 
-        #Hottest Day and Coldest Day
+        # #Hottest Day and Coldest Day of each year
         f.write("\nHottest Day - " + str(date_max[4:6]) + "/" + str(date_max[6::]) + " with Station Code - " + str(station_code_max[1::]) + " and Temp of " + str(TEMP_MAX))
         f.write("\nColdest Day - " + str(date_min[4:6]) + "/" + str(date_min[6::]) + " with Station Code - " + str(station_code_min[1::]) + " and Temp of " + str(TEMP_MIN) + "\n")
+
+        ###################### TASK 2 ###############################################
+        if (x == (len(file_path)-1)):
+
+            #Hottest/Coldest Day from 2010-2019
+            hotTemp, maxIndex = getMaxTemp(hotDict)
+            coldTemp, minIndex = getMinTemp(coldDict)
+            #get Days
+            hotestDay = getDate(hotDict,maxIndex)
+            coldestDay = getDate(coldDict,minIndex)
+            #get Station Code
+            hotStation = getStation(hotDict,maxIndex)
+            coldStation = getStation(coldDict,minIndex)
+            print(hotStation)
+            print(coldStation)
+            
+            print("\nThe Hotest Day across all years (2010 - 2019) is: " + str(hotestDay[4:6]) + "/" + str(hotestDay[6::]) + " 2" + str(hotestDay[0:3]) + " with Station Code: " + str(hotStation) + " with Temp of " + str(hotTemp))
+            print("\nThe Coldest Day across all years (2010 - 2019) is: " + str(coldestDay[4:6]) + "/" + str(coldestDay[6::]) + " 2" + str(coldestDay[0:3]) + " with Station Code: " + str(coldStation) + " with Temp of " + str(coldTemp))
+
+        ###################### TASK 3 ###############################################
+
+        if year == 2015:
+            PRCP_MAX = cleanData.select("PRCP").rdd.max()[0]
+            PRCP_MIN = cleanData.select("PRCP").rdd.min()[0]
+            prcpmax_row = cleanData.filter(cleanData.TEMP == TEMP_MAX).collect()
+            prcpmin_row = cleanData.filter(cleanData.TEMP == TEMP_MIN).collect()
+             #Station Code (MAX/MIN)
+            prcpstation_code_max = prcpmax_row[0][0]
+            prcpstation_code_min = prcpmin_row[0][0]
+
+            #DATE (MAX/MIN)
+            prcpdate_max = prcpmax_row[0][1]
+            prcpdate_min = prcpmin_row[0][1]
+
+            f.write("\nMaximum Precipitation - " + str(prcpdate_max[4:6]) + "/" + str(prcpdate_max[6::]) + " with Station Code - " + str(prcpstation_code_max[1::]) + " and Precipation of " + str(PRCP_MAX))
+            f.write("\nMinimum Precipitation - " + str(prcpdate_min[4:6]) + "/" + str(prcpdate_min[6::]) + " with Station Code - " + str(prcpstation_code_min[1::]) + " and Precipation of " + str(PRCP_MIN) + "\n")
+
+        ###################### TASK 5 ###############################################
+
+        if year == 2019:
+            GUST_MAX = cleanData.select("GUST").rdd.max()[0]
+            gustmax_row = cleanData.filter(cleanData.TEMP == TEMP_MAX).collect()
+            guststation_code_max = prcpmax_row[0][0]
+            gustdate_max = prcpmax_row[0][1]
+            f.write("\nMaximum Wind Gust - " + str(gustdate_max[4:6]) + "/" + str(gustdate_max[6::]) + " with Station Code - " + str(guststation_code_max[1::]) + " and Gust Winds of " + str(GUST_MAX))
 
     f.close()
